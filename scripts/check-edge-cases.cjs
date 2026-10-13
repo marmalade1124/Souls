@@ -1,3 +1,4 @@
+require('./mock-search.cjs');
 // Isolated fault injection. Clipboard, native controls and power actions are simulated.
 const {app,BrowserWindow,clipboard,dialog,screen,safeStorage}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
@@ -34,7 +35,7 @@ app.whenReady().then(async()=>{
   try {
     await pause(1500);const win=BrowserWindow.getAllWindows()[0],invoke=code=>win.webContents.executeJavaScript(code);
     if(mode==='corrupt'||mode==='cipher'){
-      const state=await invoke('window.soul.state()');assert.deepEqual(state.pins,[]);assert.deepEqual(state.roots,[]);assert.equal(state.lastTab,'settings');assert.ok(state.recoveryWarning);
+      const state=await invoke('window.soul.state()');assert.deepEqual(state.pins,[]);assert.deepEqual(state.roots,[]);assert.equal(state.lastTab,'search');assert.ok(state.recoveryWarning);
       assert.ok(fs.existsSync(path.join(profile,'preferences.json.recovery')));const recovered=fs.readFileSync(path.join(profile,'preferences.json.recovery'),'utf8');
       await invoke("window.soul.preference('alwaysOnTop',false)");assert.equal(JSON.parse(fs.readFileSync(path.join(profile,'preferences.json'),'utf8')).alwaysOnTop,false);
       assert.equal(fs.readFileSync(path.join(profile,'preferences.json.recovery'),'utf8'),recovered);assert.equal(fs.existsSync(path.join(profile,'preferences.json.tmp')),false);

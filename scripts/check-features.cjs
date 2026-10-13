@@ -1,3 +1,4 @@
+require('./mock-search.cjs');
 // Isolated integration tests: radios, seeking and clipboard are simulated; no user state changes.
 const {app,BrowserWindow,clipboard,ClipboardItem,safeStorage}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');

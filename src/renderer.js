@@ -83,6 +83,7 @@ function setExpanded(layout) {
   const height = open ? (layout.height || size[1]) : 1;
   if (open) showPanel(tab);
   isOpen = open; document.body.classList.toggle('open',open); $('#expanded').inert = !open; $('#expanded').setAttribute('aria-hidden',String(!open));
+  if(open && tab==='search')requestAnimationFrame(()=>{if(isOpen&&currentTab==='search'){$('#file-query').focus();$('#file-query').select();if($('#file-query').value.trim())doSearch();}});
   flowTo(width,height,layout.token);
   if (open && slidersReady) refreshControls();
   if (open && slidersReady) refreshPlayback();
@@ -106,8 +107,8 @@ function renderIcons() {
   document.querySelectorAll('[data-media]').forEach(b => { if (['previous','play','next'].includes(b.dataset.media)) b.replaceChildren(icon(b.dataset.media)); });
 }
 function resultRow(item, file=false) {
-  const row = el('div','result-row'); row.append(el('span','result-icon',file ? (item.kind === 'folder' ? '▱' : '▤') : item.name[0].toUpperCase()));
-  const open = button('',`Open ${item.name}`,() => api.open(item.path),'result-open'); open.title = item.path; open.append(el('span','result-name',item.name)); if(file) open.append(el('span','result-path',item.path)); row.append(open);
+  const row = el('div','result-row');row.dataset.path=item.path; row.append(el('span','result-icon',file ? (item.kind === 'folder' ? '▱' : '▤') : item.name[0].toUpperCase()));
+  const open = button('',`Open ${item.name}`,async()=>{await api.open(item.path);if(currentTab==='search')await api.hide();},'result-open'); open.title = item.path; open.append(el('span','result-name',item.name)); if(file) open.append(el('span','result-path',item.path)); row.append(open);
   const pinned = state.pins.some(p => p.path === item.path);
   const action = file ? button('↗',`Show ${item.name} in Explorer`,() => api.reveal(item.path)) : button(pinned?'★':'☆',`${pinned?'Unpin':'Pin'} ${item.name}`,async () => { state = await (pinned ? api.unpin(item.path) : api.pin(item.path)); renderPins(); renderApps(); },`result-action${pinned?' starred':''}`);
   row.append(action); return row;
@@ -120,17 +121,27 @@ function renderPins() {
   for (const item of state.pins.filter(i => i.name.toLowerCase().includes(query))) $('#pins').append(resultRow(item));
 }
 function renderApps() { renderPins(); const query = $('#app-query').value.toLowerCase().trim(); $('#app-list').replaceChildren(); const matches = installed.filter(i => i.name.toLowerCase().includes(query) && !state.pins.some(p=>p.path===i.path)); $('#app-count').textContent = `${installed.length} apps`; for (const item of matches.slice(0,100)) $('#app-list').append(resultRow(item)); if (!matches.length && !$('#pins').children.length) empty($('#app-list'),'No matching apps.','Add an app with the + button above.'); }
-function renderRoots() { $('#roots').replaceChildren(); for (const root of state.roots) { const chip = el('span','root-chip',root); chip.title = root; chip.append(button('×',`Stop searching ${root}`,async () => { state = await api.removeRoot(root); renderRoots(); doSearch(); })); $('#roots').append(chip); } }
+function renderRoots() { $('#roots').replaceChildren(); for (const root of state.roots) { const chip = el('span','root-chip',root); chip.title = root; chip.append(button('×',`Remove extra location ${root}`,async () => { state = await api.removeRoot(root); renderRoots(); doSearch(); })); $('#roots').append(chip); } }
+let selectedResult=0,lastIndexRefresh=0,renderedSearchQuery='';
+function selectResult(index){const rows=[...$('#file-list').querySelectorAll('.result-row')];selectedResult=rows.length?(index+rows.length)%rows.length:0;rows.forEach((row,i)=>{row.classList.toggle('search-selected',i===selectedResult);row.setAttribute('aria-current',String(i===selectedResult));});}
+function paintIndex(status){
+  state.searchIndex=status;$('#index-status').textContent=status.error||`${status.indexing?'Indexing your PC':status.ready?'Index ready':'Preparing index'} · ${status.count.toLocaleString()} items${status.skipped?` · ${status.skipped} locations unavailable`:''}${status.scopeWarning?` · ${status.scopeWarning}`:''}${status.watchWarning?` · ${status.watchWarning}`:''}`;
+  $('#reindex').disabled=status.indexing;
+  if(isOpen&&currentTab==='search'&&$('#file-query').value.trim()&&((status.ready&&!status.indexing)||Date.now()-lastIndexRefresh>1500)){lastIndexRefresh=Date.now();doSearch();}
+}
 async function doSearch() {
-  const generation = ++searchGeneration; const query = $('#file-query').value.trim(); $('#file-list').replaceChildren();
-  if (query.length < 2) { $('#search-status').textContent = 'TYPE AT LEAST TWO CHARACTERS'; return; }
-  const appMatches = installed.filter(i => i.name.toLowerCase().includes(query.toLowerCase())).slice(0,20);
+  const generation = ++searchGeneration; const query = $('#file-query').value.trim();const previousPath=renderedSearchQuery===query?$('#file-list .search-selected')?.dataset.path:null;renderedSearchQuery=query; $('#file-list').replaceChildren();
+  if (!query) { $('#search-status').textContent = 'START TYPING TO SEARCH · ↑ ↓ TO CHOOSE · ENTER TO OPEN';if(api)api.cancelSearch();return; }
+  const apps=[...new Map([...state.pins,...installed].map(item=>[item.path.toLowerCase(),item])).values()];
+  const appMatches = apps.map(item=>({item,score:scoreMatch(item,query)})).filter(match=>match.score>=0).sort((a,b)=>b.score-a.score||a.item.name.localeCompare(b.item.name)).slice(0,20).map(match=>match.item);
   for (const item of appMatches) $('#file-list').append(resultRow(item));
-  $('#search-status').textContent = state.roots.length ? 'SEARCHING YOUR FOLDERS…' : 'ADD A FOLDER TO INCLUDE FILE RESULTS';
+  selectResult(0);$('#search-status').textContent = 'SEARCHING YOUR PC…';
   const results = await act(() => api.search(query)); if (!results || generation !== searchGeneration) return;
-  for (const item of results.items) $('#file-list').append(resultRow(item,true));
-  $('#search-status').textContent = `${appMatches.length + results.items.length} RESULTS${results.truncated?' · SEARCH LIMITED — TRY A MORE SPECIFIC FOLDER':''}${state.roots.length?'':' · ADD A FOLDER FOR FILES'}`;
-  if (!appMatches.length && !results.items.length) empty($('#file-list'),'Nothing found yet.','Try another name or add a folder to your search.');
+  const combined=[...new Map([...results.items,...appMatches].map(item=>[item.path.toLowerCase(),item])).values()].sort((a,b)=>scoreMatch(b,query)-scoreMatch(a,query)||(a.kind==='app'?-1:0)-(b.kind==='app'?-1:0)||a.name.localeCompare(b.name));
+  $('#file-list').replaceChildren();for (const item of combined) $('#file-list').append(resultRow(item,item.kind!=='app'));
+  $('#search-status').textContent = `${combined.length} RESULTS${results.truncated?' · TOP MATCHES — NARROW YOUR QUERY':''}${results.index?.indexing?' · INDEXING CONTINUES':''}`;
+  const rows=[...$('#file-list').querySelectorAll('.result-row')];selectResult(Math.max(0,rows.findIndex(row=>row.dataset.path===previousPath)));
+  if (!appMatches.length && !results.items.length) empty($('#file-list'),'No matches yet.',results.index?.indexing?'Files will appear as indexing progresses.':'Try another name or refresh the file index.');
 }
 function mergeClipboard(snapshot) {
   if((snapshot.clipboardRevision??snapshot.revision??0)<(state.clipboardRevision??0))return;
@@ -294,15 +305,18 @@ async function init() {
   $('#cancel-power').onclick = () => act(async () => { await api.power('cancel'); toast('Pending shutdown or restart canceled'); });
   $('#add-app').onclick = () => act(async () => { state = await api.addPin(); renderApps(); });
   $('#add-folder').onclick = () => act(async () => { state = await api.addRoot(); renderRoots(); doSearch(); });
+  $('#reindex').onclick=()=>act(async()=>paintIndex(await api.reindex()));
   $('#hide').onclick = () => api.hide();
   $('#app-query').oninput = renderApps;
-  let debounce; $('#file-query').oninput = () => { ++searchGeneration; clearTimeout(debounce); debounce = setTimeout(doSearch,250); };
+  let debounce; $('#file-query').oninput = () => { ++searchGeneration;clearTimeout(debounce);api.cancelSearch();debounce=setTimeout(doSearch,100); };
+  $('#file-query').onkeydown=e=>{if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();selectResult(selectedResult+(e.key==='ArrowDown'?1:-1));$('#file-list .search-selected')?.scrollIntoView({block:'nearest'});}else if(e.key==='Enter'){e.preventDefault();$('#file-list .search-selected .result-open')?.click();}};
   $('#clipboard-enabled').onchange = async () => {const input=$('#clipboard-enabled');input.disabled=true;try {mergeClipboard(await api.preference('clipboardEnabled',input.checked));}catch(error){toast(error.message);}finally{input.disabled=false;renderClips();}};
   $('#always-on-top').onchange = () => act(async () => { state = await api.preference('alwaysOnTop',$('#always-on-top').checked); });
   $('#clear-clips').onclick = () => act(async () => {await api.clearClips();mergeClipboard(await api.clipboardState());renderClips();});
-  api.onExpanded(setExpanded); api.onClips(payload => {mergeClipboard(payload);renderClips();}); api.onAppsReady(async () => { installed = await api.apps(); renderApps(); });
+  api.onExpanded(setExpanded); api.onClips(payload => {mergeClipboard(payload);renderClips();}); api.onAppsReady(async () => { installed = await api.apps(); renderApps();if(currentTab==='search'&&$('#file-query').value.trim())doSearch(); });
   api.onClipboardError(toast);
   api.onStorageError(toast);
+  api.onSearchIndex(paintIndex);paintIndex(await api.indexState());
   new ResizeObserver(updateIndicator).observe($('nav'));
   initSliders(); await api.expand(true);refreshRadios();
   if(state.recoveryWarning)toast(state.recoveryWarning);

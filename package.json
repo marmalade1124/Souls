@@ -1,13 +1,15 @@
 {
   "name": "soul-island",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A floating Windows desktop toolbar",
   "main": "src/main.js",
   "private": true,
+  "author": "marmalade1124",
   "scripts": {
     "start": "electron .",
     "test": "node --test tests/*.test.js",
-    "pack": "electron-builder --win dir"
+    "pack": "electron-builder --win dir",
+    "installer": "electron-builder --win nsis --x64"
   },
   "build": {
     "appId": "in.soul.desktop",
@@ -16,10 +18,18 @@
       "src/**/*",
       "package.json"
     ],
-    "asarUnpack": ["src/media.ps1", "src/controls.ps1"],
+    "asarUnpack": ["src/media.ps1", "src/controls.ps1", "src/search-worker.js", "src/search-index.js", "src/search-match.js"],
     "win": {
-      "target": "dir",
+      "target": ["dir", "nsis"],
       "icon": "src/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "Soul-Setup-${version}.${ext}"
     }
   },
   "devDependencies": {

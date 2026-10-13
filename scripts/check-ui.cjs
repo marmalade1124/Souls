@@ -1,3 +1,4 @@
+require('./mock-search.cjs');
 // Electron integration check: exercises our own renderer, never system actions.
 const {app,BrowserWindow,clipboard} = require('electron');
 const fs = require('node:fs');
@@ -95,7 +96,7 @@ app.whenReady().then(async()=>{
     await pause(500);
     app.emit('second-instance');
     await pause(1200);
-    assert.equal(await window.webContents.executeJavaScript("document.querySelector('.tab.active').dataset.tab"),'settings','invocation always opens Controls');
+    assert.equal(await window.webContents.executeJavaScript("document.querySelector('.tab.active').dataset.tab"),'search','invocation always opens Search');
     await capture('settings');
     await window.webContents.executeJavaScript("document.querySelector('#collapse').click()");
     await pause(1200); assert.deepEqual(window.getBounds(),stableBounds);
@@ -119,8 +120,8 @@ app.whenReady().then(async()=>{
     assert.deepEqual(await window.webContents.executeJavaScript("(()=>{const r=document.querySelector('#island').getBoundingClientRect();return[Math.round(r.width),Math.round(r.height)]})()"),[340,1]);
     app.emit('second-instance');await pause(1200);assert.equal(window.isVisible(),true);
     assert.equal(nativeResizes,0);
-    console.log('PASS hidden reopen starts directly in Controls, with a stable native surface');
-    console.log('PASS edge attachment, direct Controls invocation, rapid navigation and collapse');
+    console.log('PASS hidden reopen starts directly in Search, with a stable native surface');
+    console.log('PASS edge attachment, direct Search invocation, rapid navigation and collapse');
     fs.writeFileSync(path.join(root,'.soul-dev','ui-check-result.txt'),'PASS');
     app.quit();
   } catch(error) { console.error(error); fs.writeFileSync(path.join(root,'.soul-dev','ui-check-result.txt'),String(error.stack)); app.quit(); }

@@ -3,7 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execFile } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
-const { searchFiles, discoverApps } = require('./library');
+const { discoverApps } = require('./library');
+const {createSearchService}=require('./search-service');
 const controls = require('./controls');
 const sanitize = require('./preferences');
 const clipFormats=require('./clip-formats');
@@ -37,7 +38,7 @@ function fitDisplay(display,x=win.getBounds().x) {
 }
 let dismissTimer, hideTimer, dialogDepth = 0, hiding = false;
 let storeRetryTimer,storeDirty=false,storeRetryDelay=1000;
-let activeSearch;
+let fileSearch;
 function retrySave() {
   storeDirty=true;
   if(quitting||storeRetryTimer)return;
@@ -99,7 +100,7 @@ function load() {
     if(fs.existsSync(storePath))recoveryWarning='Saved preferences or clipboard history could not be read. A recovery copy was retained where possible.';
   }
 }
-function publicState() { return { ...state, clipboardRevision, clipboardWatching, recoveryWarning, encryptionAvailable: safeStorage.isEncryptionAvailable() }; }
+function publicState() { return { ...state, clipboardRevision, clipboardWatching, recoveryWarning, searchIndex:fileSearch?.status(), encryptionAvailable: safeStorage.isEncryptionAvailable() }; }
 const layouts = { settings: { width: 600, height: 550 }, apps: { width: 640, height: 480 }, search: { width: 640, height: 480 }, clipboard: { width: 640, height: 480 }, music: { width: 520, height: 430 }, power: { width: 600, height: 250 } };
 function shapeIsland(width, height) {
   width*=displayScale;height*=displayScale;
@@ -160,13 +161,13 @@ function createWindow() {
     fitDisplay(screen.getDisplayMatching(bounds),bounds.x);
   });
 }
-function showControls() {
+function showSearch() {
   clearTimeout(hideTimer);hiding=false;win.setIgnoreMouseEvents(false);
   clearTimeout(dismissTimer);
   if (!win.isVisible()) win.show();
   win.moveTop();
-  if (state.lastTab !== 'settings') { state.lastTab = 'settings'; saveRuntime(); }
-  resize(true,'settings');
+  if (state.lastTab !== 'search') { state.lastTab = 'search'; saveRuntime(); }
+  resize(true,'search');
   win.focus();
 }
 function hideSoul() {
@@ -205,27 +206,29 @@ async function installedApps() {
 
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
-  app.on('second-instance', () => { if (win) showControls(); });
+  app.on('second-instance', () => { if (win) showSearch(); });
   app.whenReady().then(async () => {
     if (process.env.SOUL_DEV_DATA) app.setPath('userData', path.resolve(process.env.SOUL_DEV_DATA));
     fs.mkdirSync(app.getPath('userData'), { recursive: true });
     storePath = path.join(app.getPath('userData'), 'preferences.json');
     load(); createWindow();
+    fileSearch=createSearchService({directory:app.getPath('userData'),extraRoots:()=>state.roots,onStatus:status=>send('search-index',status)});
+    fileSearch.rebuild();
     const refit=()=>{clearTimeout(displayTimer);displayTimer=setTimeout(()=>{if(win&&!win.isDestroyed())fitDisplay(screen.getDisplayMatching(win.getBounds()));},150);};
     screen.on('display-removed',refit);screen.on('display-metrics-changed',refit);powerMonitor.on('resume',refit);
     const icon = nativeImage.createFromPath(path.join(__dirname, 'icon.png'));
     tray = new Tray(icon);
     tray.setToolTip('Soul · desktop island');
-    tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Show Soul', click: showControls }, { label: 'Quit Soul', click: () => app.quit() }]));
-    tray.on('click', () => { hiding || !win.isVisible() ? showControls() : hideSoul(); });
-    globalShortcut.register('CommandOrControl+Shift+Space', showControls);
+    tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Show Soul', click: showSearch }, { label: 'Quit Soul', click: () => app.quit() }]));
+    tray.on('click', () => { hiding || !win.isVisible() ? showSearch() : hideSoul(); });
+    globalShortcut.register('CommandOrControl+Shift+Space', showSearch);
     clipTimer = setInterval(captureClipboard,350);
     apps = await installedApps();
     send('apps-ready');
   });
 }
 handle('state', () => publicState());
-handle('expand', open => {if(typeof open!=='boolean')throw new Error('Invalid visibility request');return open ? showControls() : hideSoul();});
+handle('expand', open => {if(typeof open!=='boolean')throw new Error('Invalid visibility request');return open ? showSearch() : hideSoul();});
 handle('controls-read', async () => {const result=await controls.request(app,'read');brightnessMode=result.brightness===null?'software':'hardware';if(brightnessMode==='hardware')dimmer?.hide();return {...result,brightness:brightnessMode==='software'?softwareBrightness:result.brightness,brightnessError:brightnessMode==='software'?'Screen dimming · hardware brightness unavailable':result.brightnessError,brightnessMode};});
 handle('media-state', () => controls.request(app,'playback'));
 handle('media-seek', value=>{
@@ -269,19 +272,22 @@ handle('reveal', p => { if (!searchAllowed.has(p)) throw new Error('Unknown sear
 handle('root-add', async () => {
   const result = await ownedDialog('showOpenDialog', { title: 'Choose a folder to search', properties: ['openDirectory'] });
   if (!result.canceled && !state.roots.includes(result.filePaths[0])) { state.roots.push(result.filePaths[0]); saveRuntime(); }
+  fileSearch.rebuild();
   return publicState();
 });
-handle('root-remove', p => { state.roots = state.roots.filter(r => r !== p); saveRuntime(); return publicState(); });
+handle('root-remove', p => { state.roots = state.roots.filter(r => r !== p); saveRuntime();fileSearch.rebuild(); return publicState(); });
 handle('search', async query => {
   if (typeof query !== 'string' || query.length > 200) throw new Error('Invalid search');
-  activeSearch?.abort();const controller=new AbortController();activeSearch=controller;
-  const results = await searchFiles(state.roots, query,{signal:controller.signal});
-  if(controller.signal.aborted)return {items:[],truncated:true};
+  if(!query.trim())return {items:[],truncated:false,index:fileSearch.status()};
+  const results = await fileSearch.query(query);
   // Keep recent results valid while the renderer handles an in-flight search.
   for (const item of results.items) searchAllowed.add(item.path);
   if (searchAllowed.size > 2000) searchAllowed = new Set(results.items.map(i => i.path));
   return results;
 });
+handle('search-index-state',()=>fileSearch.status());
+handle('search-reindex',()=>fileSearch.rebuild());
+handle('search-cancel',()=>fileSearch.cancel());
 handle('settings', id => { if (!Object.hasOwn(settings,id)) throw new Error('Unknown setting'); return shell.openExternal(settings[id]); });
 handle('preference', async (key, value) => {
   if (!['alwaysOnTop', 'clipboardEnabled'].includes(key) || typeof value !== 'boolean') throw new Error('Invalid preference');
@@ -303,7 +309,7 @@ handle('power', async action => {
   if (action === 'lock') return run('rundll32.exe', ['user32.dll,LockWorkStation']);
   await run('shutdown.exe', [action === 'restart' ? '/r' : '/s', '/t', '60']); return true;
 });
-app.on('before-quit', () => { quitting = true;activeSearch?.abort();if(storeDirty)try{save();}catch{} controls.stop(); });
+app.on('before-quit', () => { quitting = true;fileSearch?.stop();if(storeDirty)try{save();}catch{} controls.stop(); });
 app.on('will-quit', () => { clearInterval(clipTimer); clearTimeout(layoutTimer); clearTimeout(dismissTimer);clearTimeout(hideTimer);clearTimeout(displayTimer);clearTimeout(storeRetryTimer);globalShortcut.unregisterAll(); });
 
 

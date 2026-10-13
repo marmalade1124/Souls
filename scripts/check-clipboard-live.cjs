@@ -1,3 +1,4 @@
+require('./mock-search.cjs');
 // Real Windows clipboard integration in an isolated Soul profile. Restore copied content afterward.
 const {app,BrowserWindow,clipboard,ClipboardItem}=require('electron');
 const path=require('node:path'),fs=require('node:fs'),assert=require('node:assert/strict');

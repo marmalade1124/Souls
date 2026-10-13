@@ -128,6 +128,7 @@ button:disabled{cursor:default}
 .clip-item{will-change:transform,opacity}
 .clip-removing{z-index:1}
 #clipboard-status{color:#dedee5}
+.index-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}.index-row>span{font-size:12px;color:#aaaab4;min-width:0}.index-row .secondary{font-size:11px;padding:7px 10px}.result-row.search-selected{background:#342c1c;box-shadow:inset 0 0 0 1px #ceb15f40}.result-row.search-selected .result-name{color:#f1e7c7}
 .radio-tile{position:relative;min-width:0;grid-column:span 2}.settings-grid .radio-tile>[data-radio]{width:100%;padding-right:28px}.settings-grid .radio-settings{position:absolute;right:5px;top:20px;padding:0;width:24px;height:30px;border:none;background:transparent;font-size:20px;text-align:center;color:inherit;display:block}.settings-grid [data-radio].gold+.radio-settings{color:#493916}
 .seek-control{margin:12px 0}.seek-control .slider-heading{font-size:12px}.seek-control .seek-status{font-size:11px;color:#a0a0ac}.seek-status:empty{display:none}
 .music-description,.track-info{min-width:0}.music-description h2,.track-info strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.music-description{flex:1}.music-description p,.track-info small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

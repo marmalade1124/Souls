@@ -6,7 +6,7 @@ Soul is a fluid, edge-attached Windows desktop toolbar for apps, file search, cl
 
 Inspired by Hitodama's interaction style, Soul is an independent implementation with its own source code, branding, and assets. **No AI, accounts, API keys, or cloud services are required.**
 
-**Version:** 0.1.0 · Early Windows desktop build
+**Version:** 0.2.0 · Early Windows desktop build
 
 ## Preview
 
@@ -19,6 +19,12 @@ Inspired by Hitodama's interaction style, Soul is an independent implementation 
 ![Soul Music panel with artwork and seeking](docs/screenshots/music.png)
 
 Screenshots come from the verification harness. Music uses example metadata and Soul's icon as artwork; real music information comes from your active Windows media player. Controls uses simulated music information with local system-control readings.
+
+### Search
+
+![Soul Search panel](docs/screenshots/search.png)
+
+Search opens from the shortcut with keyboard focus. This screenshot uses isolated test files, not personal search results.
 
 ## Contents
 
@@ -41,10 +47,10 @@ Screenshots come from the verification harness. Music uses example metadata and 
 
 | Area | What Soul does |
 | --- | --- |
-| Desktop island | Opens directly into Controls, attaches to the top edge, and hides when you click outside. |
+| Desktop island | Opens directly into Search, attaches to the top edge, and hides when you click outside. |
 | Motion | Interruptible spring expansion, fading dismissal, connected tab transitions, morphing play/pause icons, and soft button feedback. |
 | Apps | Discovers Start Menu shortcuts and Windows apps; lets you star apps or add `.exe` and `.lnk` shortcuts. |
-| Search | Searches installed apps and the folders you choose; opens results or reveals them in Explorer. |
+| Search | Ranks apps and files across accessible mounted drives, including hidden and dependency folders. |
 | Clipboard | Keeps optional, encrypted history of text, formatted text, images, and copied file paths. |
 | Music | Shows title, artist, album, and artwork; supports transport controls and seeking where the player allows it. |
 | Volume | Reads and changes the default Windows audio output volume. |
@@ -61,7 +67,7 @@ There is no separate floating media-player window. Music lives inside the main i
 ### Running a packaged build
 
 - A modern Windows desktop environment. Development and native integration checks were performed on Windows 11 x64; Windows 10 configurations have not been fully verified.
-- The **entire** `win-unpacked` folder produced by the build.
+- The installed application, or the **entire** `win-unpacked` folder when using the portable build.
 - Windows PowerShell and the Windows services used by audio, media, radios, and clipboard integration.
 - A compatible display for hardware brightness, or the software-dimming fallback.
 
@@ -86,6 +92,16 @@ npm start
 
 Soul opens at the top of the primary display and adds an icon to the system tray.
 
+### Install Soul
+
+Build the installer with `npm run installer`, then open:
+
+```text
+dist/Soul-Setup-0.2.0.exe
+```
+
+The setup wizard supports choosing an installation directory, creates desktop and Start Menu shortcuts, and includes an uninstaller. It defaults to a per-user installation. The installer is unsigned and has not yet been published as a GitHub release.
+
 ### Run a packaged build
 
 After building, open:
@@ -104,7 +120,7 @@ Packaged binaries are excluded from this source repository. These instructions d
 
 | Action | Result |
 | --- | --- |
-| `Ctrl + Shift + Space` | Opens directly into Controls, including while hidden. |
+| `Ctrl + Shift + Space` | Opens Search with the input focused and existing text selected, including while hidden. |
 | Click outside Soul | Hides the complete island. |
 | `Esc` or upper-right × | Hides the island. |
 | Hide to tray | Hides without quitting. |
@@ -137,12 +153,20 @@ Starred apps appear first. Discovery runs at startup and combines Start Menu sho
 
 ### Search
 
-1. Open **Search**.
-2. Add folders using **+ Folder**.
-3. Enter at least two characters.
-4. Open a result, or use its reveal button to locate it in Explorer.
+1. Press **Ctrl + Shift + Space** and start typing immediately.
+2. Search an app name, filename, or words from a file's path. Single-word queries support fuzzy filename matching.
+3. Use **↑ / ↓** to choose a match and **Enter** to open it. Soul hides after a successful launch.
+4. Use a result's reveal button to locate it in Explorer.
 
-Search runs on demand rather than maintaining a background index. It skips symbolic links and common system/dependency folders. A search stops after roughly five seconds, 15,000 scanned entries, or 60 file results. Narrow truncated searches with smaller roots or more specific queries.
+Soul builds its own local filename-and-path index in a background worker. It automatically scans the user profile and mounted fixed, removable, and mapped network drives with drive letters. Hidden folders, AppData, Windows folders and dependency folders are included when accessible. **You do not need to add a folder before file search works.** Use **+ Location** for extra locations such as an unmapped network share.
+
+The first scan can take minutes on large drives. Cached results and files already discovered remain searchable while the scan runs; progress and inaccessible-location counts appear in the Search panel. There is no former 15,000-entry or five-second cutoff on indexing. Queries show up to 100 ranked file/folder matches plus up to 20 app matches, deduplicated and ordered by relevance.
+
+Filesystem notifications update the in-memory index for new, renamed and deleted items where supported. Full scans also run at startup and every 20 minutes. **Refresh index** requests a full rescan. If notification monitoring or drive discovery is unavailable, Soul reports it rather than claiming complete coverage.
+
+Windows permissions still apply: inaccessible locations cannot be searched. Junctions and symbolic links are listed but their targets are not recursively followed, avoiding loops. Offline or stuck folders are skipped after a timeout. Folder-mounted volumes without drive letters may need an explicit extra location. Files are searched by name/path, not by their contents; this is not a full implementation of Flow Launcher's plugins or Everything's NTFS indexer.
+
+The index is stored locally as file-index.ndjson beside preferences. It contains filenames, paths and file/folder kinds, **not file contents**. Unlike clipboard history, it is not encrypted. Live changes are persisted in subsequent full index snapshots; startup rescanning reconciles the cached snapshot. Large indexes consume disk space and worker memory.
 
 ### Power
 
@@ -235,6 +259,7 @@ Separate per-monitor brightness controls are not implemented.
 npm ci
 npm test
 npm run pack
+npm run installer
 ```
 
 The build creates:
@@ -249,7 +274,7 @@ dist/
 
 Source is packaged in an ASAR archive. Native PowerShell helpers are unpacked into resources so Windows can execute them.
 
-No installer or auto-updater is configured. The project does not configure a production code-signing identity; Windows may warn about an unsigned build.
+`npm run pack` creates the unpacked directory; `npm run installer` builds the NSIS setup executable. An auto-updater is not configured. The project does not configure a production code-signing identity; Windows may warn about the unsigned installer. The interactive install/uninstall wizard has not been exercised on a clean machine.
 
 ### Broken npm launcher
 
@@ -270,7 +295,7 @@ Replace `start` with `ci`, `test`, or `run pack` as needed.
 npm test
 ```
 
-The current suite has **17 passing tests** covering worker lifecycle and timeouts, search limits and cancellation, preference validation, clipboard formats, history budgets, and malformed payloads.
+The current suite has **22 passing tests** covering worker lifecycle and timeouts, search limits and cancellation, preference validation, clipboard formats, history budgets, and malformed payloads.
 
 ### Electron checks
 
@@ -279,6 +304,7 @@ Run from the project root:
 ```powershell
 npx electron scripts/check-ui.cjs
 npx electron scripts/check-features.cjs
+npx electron scripts/check-search.cjs
 npx electron scripts/check-edge-cases.cjs runtime
 ```
 
@@ -290,7 +316,7 @@ npx electron scripts/check-edge-cases.cjs cipher
 npx electron scripts/check-edge-cases.cjs display
 ```
 
-Scripts use isolated profiles under `.soul-dev/` and write results, logs, or screenshots there. Feature checks simulate native controls and clipboard contents. UI checks substitute clipboard and transport operations while reading local system controls. Power checks are mocked and do not shut down the computer.
+Scripts use isolated profiles under `.soul-dev/` and write results, logs, or screenshots there. `check-search.cjs` exercises the real index against isolated fixtures; `check-search.cjs --packaged` loads the built ASAR source and unpacked worker. Other UI harnesses substitute the index to avoid scanning personal drives. Feature checks simulate native controls and clipboard contents. UI checks substitute clipboard and transport operations while reading local system controls. Power checks are mocked and do not shut down the computer.
 
 ### Real clipboard verification
 
@@ -311,6 +337,8 @@ This temporarily writes sample text, images, formatted text, and file-copy data 
 - Native seeking at the existing playback position.
 - Radio enumeration and a Bluetooth request retaining its existing on state.
 - Packaged-source comparison against the delivered implementation.
+- Real file-index worker tests: hidden/dependency paths, more than 15,000 entries, cached reload, live file creation, and deleted-file removal.
+- Search startup focus, registered shortcut callback, Arrow/Enter selection and launch, refresh, and worker loading from packaged resources.
 
 Other players, wireless reconnection cycles, physical monitor changes, and long-running hardware behavior still need testing. See [QA.md](QA.md) for the detailed record.
 
@@ -322,7 +350,7 @@ Soul uses Electron with plain HTML, CSS, JavaScript, and PowerShell helpers. The
 Renderer → Explicit preload API → Electron main process
                                   ├── Windows, tray and shortcuts
                                   ├── Clipboard and encrypted preferences
-                                  ├── Apps and scoped file search
+                                  ├── Apps and global indexed search
                                   └── Persistent Windows helper
                                       ├── Audio volume
                                       ├── Brightness / DDC/CI
@@ -342,12 +370,15 @@ Renderer → Explicit preload API → Electron main process
 | `src/media.ps1` | Windows media-key dispatch. |
 | `src/clip-formats.js` | Clipboard payloads, previews, keys, validation, and budgets. |
 | `src/preferences.js` | Preference and history sanitization. |
-| `src/library.js` | App discovery and bounded, cancellable file search. |
+| `src/library.js` | App discovery and legacy scoped-search helper. |
+| `src/search-service.js` | Drive discovery, worker lifecycle, queries, cancellation, and refresh. |
+| `src/search-worker.js` | Background indexing, local cache and filesystem notifications. |
+| `src/search-index.js`, `src/search-match.js` | Loop-safe traversal and shared app/file relevance matching. |
 | `tests/`, `scripts/` | Unit tests and Electron verification. |
 
 The transparent native window remains a stable canvas while the visible island and its input region change. This avoids native resizing every animation frame. Motion can be interrupted; reduced-motion preferences are respected.
 
-The renderer uses context isolation, sandboxing, and no Node.js integration. IPC is restricted to the owned main window/frame and explicit validated actions. Main-window navigation and new windows are blocked. Runtime code contains no telemetry or application network requests.
+The renderer uses context isolation, sandboxing, and no Node.js integration. IPC is restricted to the owned main window/frame and explicit validated actions. Main-window navigation and new windows are blocked. Soul has no telemetry or cloud API calls. Searching network shares may generate ordinary filesystem network traffic.
 
 Project knowledge outputs are in [`graphify-out/`](graphify-out/). The graph is a navigation aid, not proof of correctness. Its report and audit files document extraction limitations.
 
@@ -357,7 +388,7 @@ Project knowledge outputs are in [`graphify-out/`](graphify-out/). The graph is 
 | --- | --- |
 | Shortcut does not work | Use the tray menu; another app may reserve it. |
 | App is missing | Restart after installation, search its name, or add an executable/shortcut manually. |
-| Search is empty or truncated | Add the right folder, enter two characters, and narrow broad roots. |
+| Search is empty or incomplete | Check index progress, wait for the first scan, refine the query, or use Refresh index. Protected/offline locations remain unavailable. |
 | Clipboard entry is missing | Enable history, check formats and limits, and retry after clipboard contention. |
 | Win + V differs | The two histories are independent. |
 | Artwork/title is missing | Use a player that exposes a Windows media session; missing artwork gets a placeholder. |
@@ -378,8 +409,8 @@ Project knowledge outputs are in [`graphify-out/`](graphify-out/). The graph is 
 - Clipboard file entries retain paths, not contents; missing files cannot be recovered from history.
 - Custom clipboard formats and oversized payloads may be omitted.
 - There is no player selector; media behavior depends on the current Windows session.
-- App discovery, the shortcut, and search limits are not configurable in a preferences screen.
-- Installer, auto-update, launch-at-login, and production signing configuration are not provided.
+- App discovery and the shortcut are not configurable in a preferences screen. Search scans filenames/paths, not contents; live filesystem notifications may be incomplete on some network or removable drives.
+- The installer is available locally, but interactive installation/uninstallation on a clean machine remains unverified. Auto-update, launch-at-login, and production signing configuration are not provided.
 - Long-duration use, actual sleep/resume, Remote Desktop clipboard behavior, and additional hardware failures need testing.
 
 Soul is an early functional app, not a claim of universal hardware compatibility.
