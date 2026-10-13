@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>Soul · Desktop island</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="fluid.css">
+</head>
+<body>
+  <main id="island">
+    <div id="expanded" inert aria-hidden="true">
+      <nav aria-label="Desktop tools">
+        <div id="tab-indicator"></div>
+        <button class="tab active" data-tab="settings">Controls</button>
+        <button class="tab" data-tab="apps">Apps</button>
+        <button class="tab" data-tab="search"><span>⌕</span> Search</button>
+        <button class="tab" data-tab="clipboard"><span>▤</span> Clipboard</button>
+        <button class="tab" data-tab="music"><span>♫</span> Music</button>
+        <button class="tab" data-tab="power"><span>⏻</span> Power</button>
+        <button id="collapse" aria-label="Hide Soul" title="Hide island">×</button>
+      </nav>
+      <div class="content">
+        <section id="apps" class="panel">
+          <div class="app-search"><input id="app-query" type="search" placeholder="Search your apps…" aria-label="Find an installed app"><button id="add-app" class="secondary" aria-label="Add an application" title="Add an application">+</button></div>
+          <div id="pins-label" class="section-label">Starred</div>
+          <div id="pins"></div>
+          <div class="section-label">All apps <span id="app-count"></span></div>
+          <div id="app-list" class="result-list"></div>
+        </section>
+        <section id="search" class="panel" hidden>
+          <div class="section-heading"><div><h1>Find your next thing.</h1><p>Search apps and the folders you choose.</p></div><button id="add-folder" class="secondary">+ Folder</button></div>
+          <input id="file-query" type="search" placeholder="Search apps, files and folders…" aria-label="Search apps files and folders">
+          <div id="roots" class="root-list"></div>
+          <div id="search-status" class="section-label">TYPE AT LEAST TWO CHARACTERS</div>
+          <div id="file-list" class="result-list"></div>
+        </section>
+        <section id="clipboard" class="panel" hidden>
+          <div class="section-heading"><div><h1>Keep that thought.</h1><p>Text, images and files, ready when you need them.</p></div><button id="clear-clips" class="secondary">Clear history</button></div>
+          <div class="notice"><div><strong id="clipboard-status" role="status">Clipboard history</strong><p>Save up to 40 items, encrypted on this device. Images and formatted content included. Pause before copying sensitive content.</p></div><label class="switch"><input id="clipboard-enabled" type="checkbox" aria-label="Enable clipboard history"><span></span></label></div>
+          <div id="clip-list" class="clip-list"></div>
+        </section>
+        <section id="music" class="panel" hidden>
+          <div class="section-heading"><div><h1>Stay in your rhythm.</h1><p>Control the music already playing on Windows.</p></div><span class="badge">SYSTEM MEDIA</span></div>
+          <div class="music-card"><div class="album-art"><span>♫</span><i></i><i></i><i></i></div><div class="music-description"><h2>Your soundtrack.</h2><p>Spotify, your browser, or your music player.</p><div class="transport"><button data-media="previous" aria-label="Previous track">Ⅰ‹</button><button class="play-large" data-media="play" aria-label="Play or pause">▷ / Ⅱ</button><button data-media="next" aria-label="Next track">›Ⅰ</button></div></div></div>
+          <div class="seek-control slider-control"><div class="slider-heading"><span class="seek-position">0:00</span><output class="seek-duration">0:00</output></div><input type="range" min="0" max="0" value="0" step="1" disabled aria-label="Track position"><small class="seek-status">Start a track to see its timeline.</small></div><div class="slider-control" data-control="volume"><div class="slider-heading"><span>Volume</span><output>—</output></div><input type="range" min="0" max="100" value="0" disabled aria-label="Volume"><small class="slider-status"></small></div>
+          <p class="hint">Start a track in your music app, then control it here.</p>
+        </section>
+        <section id="settings" class="panel" hidden>
+          <div class="section-heading"><div><h1>Make yourself comfortable.</h1><p>A shortcut to the settings that matter.</p></div></div>
+          <div class="settings-grid"><div class="radio-tile"><button data-radio="wifi" aria-pressed="false"><span>◉</span><strong>Wi-Fi</strong><small>Network settings</small></button><button data-setting="wifi" class="radio-settings" aria-label="Open Wi-Fi settings" title="Open Windows settings">⋯</button></div><div class="radio-tile"><button data-radio="bluetooth" aria-pressed="false"><span>ᛒ</span><strong>Bluetooth</strong><small>Devices</small></button><button data-setting="bluetooth" class="radio-settings" aria-label="Open Bluetooth settings" title="Open Windows settings">⋯</button></div><button data-setting="sound" class="gold"><span>♪</span><strong>Audio</strong><small>Input & output</small></button><button data-setting="display"><span>▱</span><strong>Display</strong><small>Brightness & screens</small></button><button data-setting="personalization" class="gold"><span>◐</span><strong>Appearance</strong><small>Wallpaper & theme</small></button></div>
+          <div class="slider-control" data-control="volume"><div class="slider-heading"><span>Volume</span><output>—</output></div><input type="range" min="0" max="100" value="0" disabled aria-label="Volume"><small class="slider-status"></small></div>
+          <div class="slider-control" data-control="brightness"><div class="slider-heading"><span>Brightness</span><output>—</output></div><input type="range" min="0" max="100" value="0" disabled aria-label="Brightness"><small class="slider-status"></small></div>
+          <div class="now-playing"><small>Windows media</small><div class="now-playing-main"><div class="compact-art"></div><div class="track-info"><strong>Your soundtrack</strong><small>Control your active player</small></div><div class="transport"><button data-media="previous" aria-label="Previous track">Ⅰ‹</button><button class="play-large" data-media="play" aria-label="Play or pause">▷</button><button data-media="next" aria-label="Next track">›Ⅰ</button></div></div></div>
+          <div class="preference-row"><div><strong>Always on top</strong></div><label class="switch"><input id="always-on-top" type="checkbox" aria-label="Keep Soul on top"><span></span></label><button id="hide" aria-label="Hide Soul to tray">Hide to tray</button></div>
+        </section>
+        <section id="power" class="panel" hidden>
+          <div class="section-heading"><div><h1>Call it a day.</h1><p>A moment to save your work before you go.</p></div><span class="badge">WINDOWS</span></div>
+          <div class="power-grid"><button data-power="lock"><span>▣</span><strong>Lock</strong></button><button data-setting="battery"><span>▱</span><strong>Sleep settings</strong></button><button data-power="restart"><span>↻</span><strong>Restart</strong></button><button data-power="shutdown"><span>⏻</span><strong>Shut down</strong></button></div>
+          <div class="notice"><div><strong>You're in control.</strong><p>Restart and shutdown ask for confirmation, then wait 60 seconds. Save any open work before confirming.</p></div></div>
+          <button id="cancel-power" class="secondary wide">Cancel a pending restart or shutdown</button>
+        </section>
+      </div>
+    </div>
+  </main>
+  <div id="toast" role="status" hidden></div>
+  <script src="renderer.js"></script>
+</body>
+</html>
+

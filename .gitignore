@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.soul-dev/
+*.log
+graphify-out/cache/
+graphify-out/.*
+graphify-out/cost.json
+preview.png
+preview-compact.png
