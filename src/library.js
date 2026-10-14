@@ -1,12 +1,12 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
-async function searchFiles(roots, query, { limit = 60, budget = 5000,signal } = {}) {
+async function searchFiles(roots, query, { limit = 60, budget = 5000,signal,minLength=2,match,skipFolders=['node_modules','.git','$recycle.bin','windows','appdata'] } = {}) {
   const needle = query.trim().toLowerCase();
-  if (needle.length < 2) return { items: [], truncated: false };
+  if (needle.length < minLength) return { items: [], truncated: false };
   const queue = [...new Set(roots)];
   const visited=new Set(),found=new Set();
-  const skip=new Set(['node_modules','.git','$recycle.bin','windows','appdata']);
+  const skip=new Set(skipFolders.map(name=>name.toLowerCase()));
   const items = [];
   const started = Date.now();
   let scanned = 0;
@@ -27,7 +27,7 @@ async function searchFiles(roots, query, { limit = 60, budget = 5000,signal } = 
       scanned++;
       if (entry.isSymbolicLink()) continue;
       const fullPath = path.join(folder, entry.name);
-      if (entry.name.toLowerCase().includes(needle) && !found.has(fullPath)) {
+      if ((match?match({name:entry.name,path:fullPath}):entry.name.toLowerCase().includes(needle)) && !found.has(fullPath)) {
         found.add(fullPath);
         items.push({ name: entry.name, path: fullPath, kind: entry.isDirectory() ? 'folder' : 'file' });
         if (items.length >= limit) {truncated=index<entries.length-1 || queue.length>0 || (entry.isDirectory()&&!skip.has(entry.name.toLowerCase()));break;}

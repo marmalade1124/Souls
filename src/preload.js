@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('soul', {
   addPin: invoke('pin-add'), pin: invoke('pin'), unpin: invoke('unpin'), open: invoke('open'), reveal: invoke('reveal'),
   addRoot: invoke('root-add'), removeRoot: invoke('root-remove'), search: invoke('search'), settings: invoke('settings'), preference: invoke('preference'),
   indexState: invoke('search-index-state'), reindex: invoke('search-reindex'), cancelSearch: invoke('search-cancel'),
+  searchSetup: invoke('search-setup'),
   onSearchIndex: callback=>ipcRenderer.on('search-index',(_event,status)=>callback(status)),
   copyClip: invoke('clip-copy'), removeClip: invoke('clip-remove'), clearClips: invoke('clip-clear'), media: invoke('media'), power: invoke('power'),
   onExpanded: callback => ipcRenderer.on('expanded', (_event, open) => callback(open)),

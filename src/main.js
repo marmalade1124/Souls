@@ -212,7 +212,7 @@ else {
     fs.mkdirSync(app.getPath('userData'), { recursive: true });
     storePath = path.join(app.getPath('userData'), 'preferences.json');
     load(); createWindow();
-    fileSearch=createSearchService({directory:app.getPath('userData'),extraRoots:()=>state.roots,onStatus:status=>send('search-index',status)});
+    fileSearch=createSearchService({app,extraRoots:()=>state.roots,onStatus:status=>send('search-index',status)});
     fileSearch.rebuild();
     const refit=()=>{clearTimeout(displayTimer);displayTimer=setTimeout(()=>{if(win&&!win.isDestroyed())fitDisplay(screen.getDisplayMatching(win.getBounds()));},150);};
     screen.on('display-removed',refit);screen.on('display-metrics-changed',refit);powerMonitor.on('resume',refit);
@@ -288,6 +288,7 @@ handle('search', async query => {
 handle('search-index-state',()=>fileSearch.status());
 handle('search-reindex',()=>fileSearch.rebuild());
 handle('search-cancel',()=>fileSearch.cancel());
+handle('search-setup',()=>shell.openExternal('https://www.voidtools.com/downloads/'));
 handle('settings', id => { if (!Object.hasOwn(settings,id)) throw new Error('Unknown setting'); return shell.openExternal(settings[id]); });
 handle('preference', async (key, value) => {
   if (!['alwaysOnTop', 'clipboardEnabled'].includes(key) || typeof value !== 'boolean') throw new Error('Invalid preference');

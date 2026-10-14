@@ -1,30 +1,38 @@
-const {Worker}=require('node:worker_threads');
 const path=require('node:path');
-const {execFile}=require('node:child_process');
-const os=require('node:os');
-function createSearchService({directory,extraRoots=()=>[],getRoots,onStatus=()=>{}}){
-  let worker,sequence=0,timer,rebuilding=false,queuedRebuild=false;
-  let status={indexing:false,count:0,skipped:0,ready:false,error:'',updated:0};const pending=new Map();
-  function stop(){clearInterval(timer);worker?.terminate();worker=null;for(const task of pending.values()){clearTimeout(task.timer);task.reject(new Error('Search worker stopped.'));}pending.clear();}
-  function start(){
-    if(worker)return;const workerFile=path.basename(path.dirname(__dirname))==='app.asar'?path.join(process.resourcesPath,'app.asar.unpacked','src','search-worker.js'):path.join(__dirname,'search-worker.js');
-    const child=new Worker(workerFile,{workerData:{directory}});worker=child;
-    child.on('message',message=>{
-      if(message.status){const finished=status.indexing&&!message.status.indexing;status={...message.status,scopeWarning:status.scopeWarning};onStatus(status);if(finished&&queuedRebuild){queuedRebuild=false;rebuild();}return;}
-      const task=pending.get(message.id);if(!task)return;pending.delete(message.id);clearTimeout(task.timer);message.error?task.reject(new Error(message.error)):task.resolve(message.result);
-    });
-    const failed=()=>{if(worker!==child)return;stop();status={...status,indexing:false,error:'Search stopped unexpectedly. Press Refresh index to retry.'};onStatus(status);};
-    child.on('error',failed);child.on('exit',failed);timer=setInterval(()=>{if(!status.indexing)rebuild();},20*60*1000);timer.unref();
+const {createClient}=require('./controls');
+const {searchFiles}=require('./library');
+const {scoreMatch}=require('./search-match');
+function createSearchService({app={isPackaged:false},extraRoots=()=>[],onStatus=()=>{},nativeClient=createClient({scriptName:'search.ps1',timeout:6000}),scan=searchFiles}={}){
+  let status={engine:'Checking',note:'Checking native search engines…',ready:false,indexing:false,count:0,error:''},generation=0,busy=false,queued,active,closed=false;
+  function publish(provider){status={...status,...provider,indexing:false,count:0};onStatus(status);}
+  const empty=()=>({items:[],truncated:false,index:status});
+  function cancel(){generation++;if(queued){queued.resolve(empty());queued=null;}if(active){active.controller.abort();active.resolve(empty());}}
+  async function flush(){
+    if(busy||closed)return;busy=true;
+    try{while(queued&&!closed){
+      const job=queued;queued=null;active=job;
+      try{
+        const roots=extraRoots().filter(root=>typeof root==='string'&&path.isAbsolute(root));
+        const [result,additional]=await Promise.all([
+          nativeClient.request(app,'query',job.query).catch(()=>({items:[],provider:{engine:'Unavailable',ready:false,error:'Start Everything or enable Windows Search.'}})),
+          roots.length?scan(roots,job.query,{limit:100,budget:2000,signal:job.controller.signal,skipFolders:[],minLength:1,match:item=>scoreMatch(item,job.query)>=0}):Promise.resolve({items:[],truncated:false})
+        ]);
+        if(job.generation!==generation||closed){job.resolve(empty());continue;}
+        publish(result.provider||{engine:'Unavailable',ready:false,error:'Search provider returned an invalid response.'});
+        const items=[...new Map([...(Array.isArray(result.items)?result.items:[]),...additional.items].filter(item=>item&&typeof item.path==='string'&&path.isAbsolute(item.path)&&typeof item.name==='string'&&['file','folder'].includes(item.kind)).map(item=>[item.path.toLowerCase(),item])).values()];
+        items.sort((a,b)=>scoreMatch(b,job.query)-scoreMatch(a,job.query)||a.name.localeCompare(b.name));
+        job.resolve({items:items.slice(0,100),truncated:!!result.truncated||additional.truncated||items.length>100,index:{...status,scopedLimited:additional.truncated}});
+      }catch(error){job.reject(error);}finally{if(active===job)active=null;}
+    }}finally{busy=false;}
   }
   async function rebuild(){
-    if(status.indexing){queuedRebuild=true;return status;}if(rebuilding)return status;rebuilding=true;start();
-    try{
-      const drives=getRoots?[]:await new Promise(resolve=>execFile('powershell.exe',['-NoProfile','-NonInteractive','-Command','[System.IO.DriveInfo]::GetDrives() | Where-Object { $_.DriveType -in "Fixed","Removable","Network" } | ForEach-Object { $_.Name } | ConvertTo-Json -Compress'],{windowsHide:true,timeout:10000,maxBuffer:16384},(error,text)=>{try{const value=JSON.parse(text);resolve((Array.isArray(value)?value:[value]).filter(p=>typeof p==='string'&&/^[A-Z]:\\$/i.test(p)));}catch{resolve([]);}}));
-      status.scopeWarning=!getRoots&&!drives.length?'Drive discovery unavailable · home and extra locations only':'';
-      const roots=[...new Set(getRoots?await getRoots():[os.homedir(),...extraRoots(),...drives])];worker?.postMessage({action:'rebuild',roots});return {...status,indexing:true};
-    }finally{rebuilding=false;}
+    try{const provider=await nativeClient.request(app,'probe');if(!closed)publish(provider);}catch{if(!closed)publish({engine:'Unavailable',ready:false,error:'Start Everything or enable Windows Search.'});}return status;
   }
-  function query(query){start();return new Promise((resolve,reject)=>{const id=++sequence;const timer=setTimeout(()=>{pending.delete(id);reject(new Error('Search timed out. Try a more specific query.'));},15000);pending.set(id,{resolve,reject,timer});worker.postMessage({id,action:'query',query});});}
-  return {rebuild,query,status:()=>status,cancel:()=>worker?.postMessage({action:'cancel'}),stop};
+  function query(query){
+    if(typeof query!=='string'||query.length>200)return Promise.reject(new Error('Invalid search query'));
+    cancel();if(!query.trim()||closed)return Promise.resolve(empty());
+    return new Promise((resolve,reject)=>{queued={query,generation,resolve,reject,controller:new AbortController()};flush();});
+  }
+  return {query,rebuild,cancel,status:()=>status,stop:()=>{closed=true;cancel();nativeClient.stop();}};
 }
 module.exports={createSearchService};

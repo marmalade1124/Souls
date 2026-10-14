@@ -1,6 +1,6 @@
 {
   "name": "soul-island",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A floating Windows desktop toolbar",
   "main": "src/main.js",
   "private": true,
@@ -18,7 +18,7 @@
       "src/**/*",
       "package.json"
     ],
-    "asarUnpack": ["src/media.ps1", "src/controls.ps1", "src/search-worker.js", "src/search-index.js", "src/search-match.js"],
+    "asarUnpack": ["src/media.ps1", "src/controls.ps1", "src/search.ps1", "src/native/**/*"],
     "win": {
       "target": ["dir", "nsis"],
       "icon": "src/icon.ico"

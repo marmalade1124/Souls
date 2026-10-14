@@ -1,7 +1,7 @@
 const {spawn} = require('node:child_process');
 const {createInterface} = require('node:readline');
 const path = require('node:path');
-function createClient({spawnProcess=spawn,timeout=20000}={}) {
+function createClient({spawnProcess=spawn,timeout=20000,scriptName='controls.ps1'}={}) {
 let worker, sequence = 0;
 const pending = new Map();
 function stop() {
@@ -11,7 +11,7 @@ function stop() {
 }
 function request(app, action, value) {
   if (!worker) {
-    const script=app.isPackaged ? path.join(process.resourcesPath,'app.asar.unpacked','src','controls.ps1') : path.join(__dirname,'controls.ps1');
+    const script=app.isPackaged ? path.join(process.resourcesPath,'app.asar.unpacked','src',scriptName) : path.join(__dirname,scriptName);
     const child=spawnProcess('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',script],{windowsHide:true,stdio:['pipe','pipe','pipe']});
     worker=child;
     createInterface({input:child.stdout}).on('line',line=>{

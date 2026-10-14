@@ -1,11 +1,11 @@
-// Real file-index worker and renderer, with isolated files and simulated launch/control actions.
+// Real bounded extra-folder search and renderer, with simulated native provider and launch actions.
 const {app,BrowserWindow,globalShortcut,shell}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..'),profile=path.join(root,'.soul-dev','search-check'),fixture=path.join(profile,'fixtures');
 app.setPath('userData',profile);fs.mkdirSync(path.join(fixture,'.hidden','node_modules','AppData','deep'),{recursive:true});
 for(const name of ['Needle A.txt','Needle B.txt'])fs.writeFileSync(path.join(fixture,'.hidden','node_modules','AppData','deep',name),'test');
 let base=path.join(root,'src');if(process.argv.includes('--packaged')){const resources=path.join(root,'dist','win-unpacked','resources');Object.defineProperty(process,'resourcesPath',{value:resources});base=path.join(resources,'app.asar','src');}
-const service=require(path.join(base,'search-service')),realCreate=service.createSearchService;service.createSearchService=options=>realCreate({...options,getRoots:async()=>[fixture]});
+const service=require(path.join(base,'search-service')),realCreate=service.createSearchService;service.createSearchService=options=>realCreate({...options,extraRoots:()=>[fixture],nativeClient:{request:async(_app,action)=>action==='probe'?{engine:'Windows Search',ready:true}:{provider:{engine:'Windows Search',ready:true},items:[],truncated:false},stop(){}}});
 const controls=require(path.join(base,'controls'));controls.request=async(_app,action)=>action==='read'?{volume:50,brightness:null}:action==='playback'?{available:false}:action==='radios'?{}:true;controls.stop=()=>{};
 let shortcut,opened;globalShortcut.register=(key,handler)=>{assert.equal(key,'CommandOrControl+Shift+Space');shortcut=handler;return true;};shell.openPath=async p=>{opened=p;return '';};
 require(path.join(base,'main'));const pause=ms=>new Promise(r=>setTimeout(r,ms));
@@ -23,7 +23,6 @@ app.whenReady().then(async()=>{try{
  shortcut();await pause(1300);assert.equal(await invoke('document.activeElement.id'),'file-query');assert.equal(await invoke("document.querySelector('.tab.active').dataset.tab"),'search');assert.equal(await invoke("document.querySelector('#file-query').selectionEnd"),11);
  assert.equal(await invoke("window.soul.search('x'.repeat(201)).then(()=>false,()=>true)"),true);
  const result=await invoke("window.soul.search('AppData Needle')");assert.equal(result.items.length,2);
- const before=(await invoke('window.soul.indexState()')).updated;await invoke('window.soul.reindex()');for(let i=0;i<100;i++){const s=await invoke('window.soul.indexState()');if(s.updated!==before&&!s.indexing)break;await pause(50);}
- assert.ok((await invoke('window.soul.indexState()')).count>=2);
- fs.writeFileSync(path.join(root,'.soul-dev',process.argv.includes('--packaged')?'packaged-search-result.txt':'search-result.txt'),'PASS real index, hidden/dependency paths, Search shortcut focus, keyboard selection/launch and refresh'+(process.argv.includes('--packaged')?', packaged worker compatibility':''));
+ await invoke('window.soul.reindex()');assert.equal((await invoke('window.soul.indexState()')).engine,'Windows Search');
+ fs.writeFileSync(path.join(root,'.soul-dev',process.argv.includes('--packaged')?'packaged-search-result.txt':'search-result.txt'),'PASS native provider UI, explicit hidden/dependency folder search, shortcut focus, keyboard launch and engine check'+(process.argv.includes('--packaged')?', packaged-source compatibility':''));
 }catch(error){fs.writeFileSync(path.join(root,'.soul-dev',process.argv.includes('--packaged')?'packaged-search-result.txt':'search-result.txt'),error.stack);console.error(error);}finally{app.quit();}});

@@ -38,10 +38,19 @@ Clipboard supports plain text, HTML/RTF, PNG/JPEG and Explorer file paths; arbit
 - Still unverified: different players' artwork/seek behavior, Bluetooth permission denial on real policy-managed machines, Wi-Fi reconnection and hardware-blocked toggles, other displays' DDC/CI behavior, and dimming over exclusive fullscreen applications or the Windows secure desktop.
 
 
-## Search and installer update (0.2.0)
+## Historical search and installer checks (0.2.0; superseded backend)
 
 - Shortcut, tray and startup now open Search; a real-index Electron fixture check verifies input focus, selected text on reopen, Arrow/Enter selection and launch, and index refresh. The test invokes the registered shortcut callback; physical keyboard delivery was not simulated.
 - Index unit checks cover hidden/AppData/dependency folders, overlapping roots, more than 15,000 entries, stuck/denied folders, link loops, ranking, fuzzy names, path words, cancellation, cached reload and live file creation.
 - The worker is packaged outside ASAR with its local modules; the packaged-source harness verifies this path.
 - NSIS x64 setup builds as Soul-Setup-0.2.0.exe. The installer is unsigned. Interactive install, upgrade and uninstall on a clean Windows machine are not yet tested.
 - Whole-PC index completion, very large indexes, notification overflow, removable-drive reconnects, network permissions and disconnected network roots still need extended hardware testing. Search cannot bypass Windows permissions or search file contents.
+
+## Native search update (0.3.0)
+
+- Removed the duplicate full-drive index, cache loading, drive watchers and periodic rescans.
+- 21 unit tests pass, including no default traversal, bounded explicit folders, deduplication, cancellation/coalescing, validation and unavailable-provider behavior.
+- Real native helper: Windows Search is available on the development PC; a README query returns at most 100 results. Everything is not installed here, so its live SDK query branch remains unverified. The bundled official SDK DLL has a valid signature.
+- Source Electron search check passes: native-provider UI (simulated), real hidden/dependency fixture traversal, shortcut focus, Arrow/Enter launch and engine check. Island UI regression passes.
+- Native engines determine coverage; extra folders have a two-second/15,000-entry budget. There is no claim of exhaustive results on arbitrary drives or shares.
+- CPU/RAM savings have not been benchmarked. Installer remains unsigned; clean-machine install/upgrade/uninstall remains unverified.
