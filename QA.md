@@ -54,3 +54,11 @@ Clipboard supports plain text, HTML/RTF, PNG/JPEG and Explorer file paths; arbit
 - Source Electron search check passes: native-provider UI (simulated), real hidden/dependency fixture traversal, shortcut focus, Arrow/Enter launch and engine check. Island UI regression passes.
 - Native engines determine coverage; extra folders have a two-second/15,000-entry budget. There is no claim of exhaustive results on arbitrary drives or shares.
 - CPU/RAM savings have not been benchmarked. Installer remains unsigned; clean-machine install/upgrade/uninstall remains unverified.
+
+## Mascot (0.3.1)
+
+- Unit checks cover hidden timer suspension, thinking/curious states, persisted pause and live reduced-motion changes.
+- Mascot uses the generated 6-by-4 sheet locally, at its cell aspect ratio. No AI or external requests. Idle loops rest between cycles.
+- Generated artwork can have small frame-to-frame variation; long-duration performance has not been benchmarked.
+- Electron UI regression passes across all six panels, including non-overlapping mascot/navigation targets, keyboard-accessible pause control and stable opening/dismissal. Unit suite: 22 passing tests.
+- Packaged search journey passes with sprite PNG loading, native Enter-key pause/wake and frozen hidden frames. Final ASAR mascot source and PNG match the workspace.

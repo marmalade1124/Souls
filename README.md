@@ -6,7 +6,7 @@ Soul is a fluid, edge-attached Windows desktop toolbar for apps, file search, cl
 
 Inspired by Hitodama's interaction style, Soul is an independent implementation with its own source code, branding, and assets. **No AI, accounts, API keys, or cloud services are required.**
 
-**Version:** 0.3.0 · Early Windows desktop build
+**Version:** 0.3.1 · Early Windows desktop build
 
 ## Preview
 
@@ -25,6 +25,12 @@ Screenshots come from the verification harness. Music uses example metadata and 
 ![Soul Search panel](docs/screenshots/search.png)
 
 Search opens from the shortcut with keyboard focus. This screenshot uses isolated test files, not personal search results.
+
+### Living flame
+
+![Soul with its living flame mascot](docs/screenshots/mascot.png)
+
+This verification screenshot uses simulated playback with local system readings.
 
 ## Contents
 
@@ -48,6 +54,7 @@ Search opens from the shortcut with keyboard focus. This screenshot uses isolate
 | Area | What Soul does |
 | --- | --- |
 | Desktop island | Opens directly into Search, attaches to the top edge, and hides when you click outside. |
+| Mascot | A living soul flame beside the tabs: idle, curious and search-thinking states; click to pause/wake. |
 | Motion | Interruptible spring expansion, fading dismissal, connected tab transitions, morphing play/pause icons, and soft button feedback. |
 | Apps | Discovers Start Menu shortcuts and Windows apps; lets you star apps or add `.exe` and `.lnk` shortcuts. |
 | Search | Ranks apps and queries Everything or Windows Search; extra folders use bounded on-demand search. |
@@ -97,7 +104,7 @@ Soul opens at the top of the primary display and adds an icon to the system tray
 Build the installer with `npm run installer`, then open:
 
 ```text
-dist/Soul-Setup-0.3.0.exe
+dist/Soul-Setup-0.3.1.exe
 ```
 
 The setup wizard supports choosing an installation directory, creates desktop and Start Menu shortcuts, and includes an uninstaller. It defaults to a per-user installation. The installer is unsigned and has not yet been published as a GitHub release.
@@ -130,6 +137,10 @@ Packaged binaries are excluded from this source repository. These instructions d
 Drag the blank space around the tabs horizontally to reposition the island. It stays attached to the top edge. Windows file pickers and confirmation dialogs keep the island open while you complete the operation.
 
 The shortcut is currently fixed. If another application reserves it, use the tray menu to show Soul.
+
+### Mascot
+
+The flame beside the tabs reacts briefly to navigation and animates while a search is pending. Click it (or focus it and press Enter/Space) to pause or wake it; this preference is stored locally. Idle motion plays briefly, then rests. All frame timers stop when the island closes, and reduced-motion mode uses a still frame. It does not use AI or track your screen.
 
 ### Controls
 
@@ -297,7 +308,7 @@ Replace `start` with `ci`, `test`, or `run pack` as needed.
 npm test
 ```
 
-The current suite has **21 passing tests** covering helper lifecycle and timeouts, search limits and cancellation, preference validation, clipboard formats, history budgets, and malformed payloads.
+The current suite has **22 passing tests** covering helper lifecycle and timeouts, search limits and cancellation, preference validation, clipboard formats, history budgets, and malformed payloads.
 
 ### Electron checks
 
@@ -365,6 +376,7 @@ Renderer → Explicit preload API → Electron main process
 | --- | --- |
 | `src/main.js` | Lifecycle, validated IPC, window shape, clipboard, dialogs, persistence, and system actions. |
 | `src/preload.js` | Explicit context-isolated renderer API. |
+| `src/mascot.js`, `src/assets/soul-flame-sheet.png` | Local sprite playback, pause preference, reduced motion and visibility handling. |
 | `src/renderer.js` | Tab state, motion, transport icons, sliders, metadata, app lists, and clipboard rows. |
 | `src/index.html` | Island structure and accessible controls. |
 | `src/style.css`, `src/fluid.css` | Base styles and current black-and-gold design. |

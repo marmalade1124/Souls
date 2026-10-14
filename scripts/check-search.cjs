@@ -12,6 +12,10 @@ require(path.join(base,'main'));const pause=ms=>new Promise(r=>setTimeout(r,ms))
 app.whenReady().then(async()=>{try{
  await pause(1600);const win=BrowserWindow.getAllWindows()[0],invoke=code=>win.webContents.executeJavaScript(code);
  assert.equal(await invoke("document.querySelector('.tab.active').dataset.tab"),'search');assert.equal(await invoke('document.activeElement.id'),'file-query');
+ assert.equal(await invoke("new Promise(resolve=>{const image=new Image();image.onload=()=>resolve(image.naturalWidth===1254&&image.naturalHeight===1254);image.onerror=()=>resolve(false);image.src='assets/soul-flame-sheet.png'})"),true,'sprite loads from packaged or source resources');
+ win.focus();await pause(100);await invoke("document.querySelector('#mascot').focus()");assert.equal(await invoke('document.activeElement.id'),'mascot');win.webContents.sendInputEvent({type:'keyDown',keyCode:'Enter'});win.webContents.sendInputEvent({type:'char',keyCode:'\r'});win.webContents.sendInputEvent({type:'keyUp',keyCode:'Enter'});await pause(100);
+ assert.equal(await invoke("document.querySelector('#mascot').dataset.state"),'sleeping','keyboard pauses mascot');
+ await invoke("document.querySelector('#mascot').click();document.querySelector('#file-query').focus()");
  for(let i=0;i<100;i++){const s=await invoke('window.soul.indexState()');if(s.ready&&!s.indexing)break;await pause(50);}
  assert.equal((await invoke('window.soul.indexState()')).ready,true);
  await invoke("(()=>{const input=document.querySelector('#file-query');input.value='Needle .txt';input.dispatchEvent(new Event('input'));})()");await pause(400);
@@ -20,6 +24,8 @@ app.whenReady().then(async()=>{try{
  await invoke("document.querySelector('#file-query').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}))");assert.ok((await invoke("document.querySelector('.search-selected').dataset.path")).endsWith('Needle B.txt'));
  fs.writeFileSync(path.join(profile,'preview.png'),(await win.webContents.capturePage()).toPNG());
  await invoke("document.querySelector('#file-query').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))");await pause(1300);assert.ok(opened.endsWith('Needle B.txt'));assert.equal(win.isVisible(),false);
+ assert.equal(await invoke("document.querySelector('#mascot').dataset.state"),'sleeping');
+ const hiddenFrame=await invoke("document.querySelector('#mascot').dataset.frame");await pause(300);assert.equal(await invoke("document.querySelector('#mascot').dataset.frame"),hiddenFrame,'hidden sprite does not advance');
  shortcut();await pause(1300);assert.equal(await invoke('document.activeElement.id'),'file-query');assert.equal(await invoke("document.querySelector('.tab.active').dataset.tab"),'search');assert.equal(await invoke("document.querySelector('#file-query').selectionEnd"),11);
  assert.equal(await invoke("window.soul.search('x'.repeat(201)).then(()=>false,()=>true)"),true);
  const result=await invoke("window.soul.search('AppData Needle')");assert.equal(result.items.length,2);

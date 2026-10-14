@@ -31,6 +31,11 @@ nav{height:34px;margin:0 14px 16px;gap:5px}
 #collapse{right:-20px;top:0;width:30px;height:32px;font-size:18px}
 .content{height:calc(100% - 50px)}
 .panel{padding:0 3px}
+nav{margin-left:0;margin-right:22px;gap:4px}
+nav .tab{font-size:13px;padding:7px 8px}
+#mascot{width:36px;height:40px;flex:none;padding:0;background:transparent;border:0;border-radius:12px;overflow:hidden}
+#mascot span{display:block;margin:auto;width:27px;height:40px;background-image:url('assets/soul-flame-sheet.png');background-size:600% 400%;background-repeat:no-repeat;pointer-events:none}
+#mascot:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .settings-grid{gap:10px}
 .settings-grid button{height:70px;border-radius:16px;padding:10px;grid-template-columns:36px 1fr;grid-template-rows:24px 19px;column-gap:8px}
 .settings-grid button>span{width:36px;height:36px}

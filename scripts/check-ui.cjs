@@ -30,6 +30,10 @@ app.whenReady().then(async()=>{
       fs.writeFileSync(path.join(output,`${name}.png`),(await window.webContents.capturePage(rect)).toPNG());
     }
     const stableBounds=window.getBounds(); let nativeResizes=0;
+    assert.equal(await window.webContents.executeJavaScript("document.querySelector('#mascot').dataset.state"),'idle');
+    await window.webContents.executeJavaScript("document.querySelector('#mascot').click()");
+    assert.equal(await window.webContents.executeJavaScript("document.querySelector('#mascot').dataset.state"),'sleeping');
+    await window.webContents.executeJavaScript("document.querySelector('#mascot').click()");
     window.on('resize',()=>nativeResizes++);
     assert.equal(await window.webContents.executeJavaScript("document.querySelector('.topbar')"),null,'compact media window removed');
     await window.webContents.executeJavaScript("document.querySelector('#collapse').click()");await pause(1200);assert.equal(window.isVisible(),false);
@@ -48,6 +52,7 @@ app.whenReady().then(async()=>{
       const actual = window.getBounds(); assert.deepEqual(actual,stableBounds,`${tab} does not resize or move the native surface`);
       const island=await window.webContents.executeJavaScript("(()=>{const r=document.querySelector('#island').getBoundingClientRect();return[Math.round(r.width),Math.round(r.height)]})()");
       assert.deepEqual(island,sizes[tab],`${tab} island dimensions`);
+      assert.ok(await window.webContents.executeJavaScript("(()=>{const buttons=[...document.querySelectorAll('nav button')].map(n=>n.getBoundingClientRect());return buttons.every((r,i)=>!i||r.left>=buttons[i-1].right)})()"),`${tab} navigation does not overlap the mascot`);
       assert.equal(actual.y,require('electron').screen.getDisplayMatching(actual).bounds.y,'native window is attached to the screen edge');
       assert.equal(await window.webContents.executeJavaScript("document.querySelector('#island').getBoundingClientRect().top"),0,'no CSS gap above island');
       const view = await window.webContents.executeJavaScript(`({active:document.querySelector('.tab.active').dataset.tab,visible:[...document.querySelectorAll('.panel')].filter(p=>!p.hidden).map(p=>p.id),contentHeight:document.querySelector('.content').clientHeight,scrollHeight:document.querySelector('#${tab}').scrollHeight})`);

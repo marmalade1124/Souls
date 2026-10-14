@@ -1,9 +1,9 @@
 {
   "package.json": {
-    "mtime": 1791986465.176282,
-    "seen": 1791987317.8576393,
-    "ast_hash": "4e61ddbe371600eb73beee89b2c7ee14",
-    "semantic_hash": "4e61ddbe371600eb73beee89b2c7ee14"
+    "mtime": 1791989863.8221505,
+    "seen": 1791990111.748733,
+    "ast_hash": "10f612d63ff574a02892d6aff8986903",
+    "semantic_hash": "10f612d63ff574a02892d6aff8986903"
   },
   "scripts/check-clipboard-live.cjs": {
     "mtime": 1791925927.1047964,
@@ -24,10 +24,10 @@
     "semantic_hash": "821d52c4f0c2e9c95ee77d47ca04366d"
   },
   "scripts/check-ui.cjs": {
-    "mtime": 1791925927.0718348,
-    "seen": 1791926918.0956864,
-    "ast_hash": "363b7f7443073dd2564451ad40223510",
-    "semantic_hash": "363b7f7443073dd2564451ad40223510"
+    "mtime": 1791989749.0723991,
+    "seen": 1791990111.748733,
+    "ast_hash": "88c84b7f05a86e54fe9092e8122e6839",
+    "semantic_hash": "88c84b7f05a86e54fe9092e8122e6839"
   },
   "src/clip-formats.js": {
     "mtime": 1791908187.0750685,
@@ -78,10 +78,10 @@
     "semantic_hash": "464edff6c1a23ee8d4ea77debbfded00"
   },
   "src/renderer.js": {
-    "mtime": 1791987135.1415508,
-    "seen": 1791987317.8576393,
-    "ast_hash": "ed246a1e79179bff2dc39bc87ecf1582",
-    "semantic_hash": "ed246a1e79179bff2dc39bc87ecf1582"
+    "mtime": 1791989701.2740142,
+    "seen": 1791990111.748733,
+    "ast_hash": "93cfd8096f890a3f08cdcb50bbe6093a",
+    "semantic_hash": "93cfd8096f890a3f08cdcb50bbe6093a"
   },
   "tests/clip-formats.test.js": {
     "mtime": 1791908337.0672312,
@@ -108,22 +108,22 @@
     "semantic_hash": "6ff5d6c388cd97b76e2cec087028b2ca"
   },
   "QA.md": {
-    "mtime": 1791987135.1415508,
-    "seen": 1791987317.8576393,
-    "ast_hash": "b3b0d9cf9fcd2e34a6d5cfbb7611a9be",
-    "semantic_hash": "b3b0d9cf9fcd2e34a6d5cfbb7611a9be"
+    "mtime": 1791990109.7787535,
+    "seen": 1791990111.748733,
+    "ast_hash": "b284ec8e4151dd1dd86e8ab8c62c007a",
+    "semantic_hash": "b284ec8e4151dd1dd86e8ab8c62c007a"
   },
   "README.md": {
-    "mtime": 1791987135.1400397,
-    "seen": 1791987317.8576393,
-    "ast_hash": "86f9693e7431c6ff39a5b5397fa1ad17",
-    "semantic_hash": "86f9693e7431c6ff39a5b5397fa1ad17"
+    "mtime": 1791989934.675765,
+    "seen": 1791990111.748733,
+    "ast_hash": "0dd84005d295fcaa7712b3d10d049d01",
+    "semantic_hash": "0dd84005d295fcaa7712b3d10d049d01"
   },
   "src/index.html": {
-    "mtime": 1791986464.4983642,
-    "seen": 1791987317.8576393,
-    "ast_hash": "a77942ea31a659f9844f3c0d8895a7df",
-    "semantic_hash": "a77942ea31a659f9844f3c0d8895a7df"
+    "mtime": 1791989701.0302868,
+    "seen": 1791990111.748733,
+    "ast_hash": "fe378b20deef52b7a3f7e3fd11fffeaa",
+    "semantic_hash": "fe378b20deef52b7a3f7e3fd11fffeaa"
   },
   "src/icon-large.png": {
     "mtime": 1791895654.1752143,
@@ -150,10 +150,10 @@
     "semantic_hash": "2fab39d4112e73e877a99afcf38bd5f3"
   },
   "scripts/check-search.cjs": {
-    "mtime": 1791986607.3559945,
-    "seen": 1791987317.8576393,
-    "ast_hash": "106c7e99200acffd3e4b11ec4fddae85",
-    "semantic_hash": "106c7e99200acffd3e4b11ec4fddae85"
+    "mtime": 1791990066.9898932,
+    "seen": 1791990111.748733,
+    "ast_hash": "3ee3325c59eee5cbb7d624ef9cbed74f",
+    "semantic_hash": "3ee3325c59eee5cbb7d624ef9cbed74f"
   },
   "scripts/mock-search.cjs": {
     "mtime": 1791925930.1340406,
@@ -190,5 +190,29 @@
     "seen": 1791987317.8576393,
     "ast_hash": "ad49aaa6b7063c45fd6ecf3a4883a719",
     "semantic_hash": "ad49aaa6b7063c45fd6ecf3a4883a719"
+  },
+  "src/mascot.js": {
+    "mtime": 1791989889.842986,
+    "seen": 1791990111.748733,
+    "ast_hash": "8cb4b1043e40ef31d3278db842058220",
+    "semantic_hash": "8cb4b1043e40ef31d3278db842058220"
+  },
+  "tests/mascot.test.js": {
+    "mtime": 1791989890.235833,
+    "seen": 1791990111.748733,
+    "ast_hash": "0e591387dd81ff19f95ec92b3f231bc6",
+    "semantic_hash": "0e591387dd81ff19f95ec92b3f231bc6"
+  },
+  "docs/screenshots/mascot.png": {
+    "mtime": 1791989847.865847,
+    "seen": 1791990111.748733,
+    "ast_hash": "19d8d13bed9c05ae71190288f35b07f6",
+    "semantic_hash": "19d8d13bed9c05ae71190288f35b07f6"
+  },
+  "src/assets/soul-flame-sheet.png": {
+    "mtime": 1791989542.224171,
+    "seen": 1791990111.748733,
+    "ast_hash": "a20339a64028f666198bc8f5ed33263a",
+    "semantic_hash": "a20339a64028f666198bc8f5ed33263a"
   }
 }

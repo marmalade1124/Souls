@@ -1,6 +1,6 @@
 {
   "name": "soul-island",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A floating Windows desktop toolbar",
   "main": "src/main.js",
   "private": true,

@@ -1,5 +1,6 @@
 const $ = selector => document.querySelector(selector);
 const api = window.soul;
+const mascot = createMascot($('#mascot'));
 let state, installed = [], isOpen = false, currentTab = 'settings', searchGeneration = 0, toastTimer;
 function toast(message) { $('#toast').textContent = message; $('#toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').hidden = true, 3500); }
 async function act(fn) { try { return await fn(); } catch (error) { toast(error.message.replace(/^Error invoking remote method '[^']+': (Error: )?/,'')); } }
@@ -70,6 +71,7 @@ function showPanel(tab, animate = true) {
   } else {panelMotion=null;document.querySelectorAll('.panel').forEach(n=>{n.hidden=n!==next;n.style.opacity='';n.style.transform='';});}
   next.hidden = false;
   currentTab = tab;
+  mascot.curious();
   if(tab==='clipboard' && api) act(async()=>{mergeClipboard(await api.clipboardState());renderClips();});
   document.querySelectorAll('.tab').forEach(n => { n.classList.toggle('active',n.dataset.tab === tab); n.setAttribute('aria-selected',String(n.dataset.tab === tab)); });
   requestAnimationFrame(updateIndicator);
@@ -83,6 +85,7 @@ function setExpanded(layout) {
   const height = open ? (layout.height || size[1]) : 1;
   if (open) showPanel(tab);
   isOpen = open; document.body.classList.toggle('open',open); $('#expanded').inert = !open; $('#expanded').setAttribute('aria-hidden',String(!open));
+  mascot.setOpen(open);
   if(open && tab==='search')requestAnimationFrame(()=>{if(isOpen&&currentTab==='search'){$('#file-query').focus();$('#file-query').select();if($('#file-query').value.trim())doSearch();}});
   flowTo(width,height,layout.token);
   if (open && slidersReady) refreshControls();
@@ -130,13 +133,17 @@ function paintIndex(status){
   $('#get-everything').hidden=status.engine==='Everything';
 }
 async function doSearch() {
+  mascot.setBusy(false);
   const generation = ++searchGeneration; const query = $('#file-query').value.trim();const previousPath=renderedSearchQuery===query?$('#file-list .search-selected')?.dataset.path:null;renderedSearchQuery=query; $('#file-list').replaceChildren();
   if (!query) { $('#search-status').textContent = 'START TYPING TO SEARCH · ↑ ↓ TO CHOOSE · ENTER TO OPEN';if(api)api.cancelSearch();return; }
   const apps=[...new Map([...state.pins,...installed].map(item=>[item.path.toLowerCase(),item])).values()];
   const appMatches = apps.map(item=>({item,score:scoreMatch(item,query)})).filter(match=>match.score>=0).sort((a,b)=>b.score-a.score||a.item.name.localeCompare(b.item.name)).slice(0,20).map(match=>match.item);
   for (const item of appMatches) $('#file-list').append(resultRow(item));
   selectResult(0);$('#search-status').textContent = 'SEARCHING YOUR PC…';
-  const results = await act(() => api.search(query)); if (!results || generation !== searchGeneration) return;
+  mascot.setBusy(true);
+  const results = await act(() => api.search(query));
+  if(generation !== searchGeneration)return;
+  mascot.setBusy(false);if(!results)return;
   const combined=[...new Map([...results.items,...appMatches].map(item=>[item.path.toLowerCase(),item])).values()].sort((a,b)=>scoreMatch(b,query)-scoreMatch(a,query)||(a.kind==='app'?-1:0)-(b.kind==='app'?-1:0)||a.name.localeCompare(b.name));
   $('#file-list').replaceChildren();for (const item of combined) $('#file-list').append(resultRow(item,item.kind!=='app'));
   $('#search-status').textContent = `${combined.length} RESULTS${results.truncated?' · TOP MATCHES — NARROW YOUR QUERY':''}${results.index?.indexing?' · INDEXING CONTINUES':''}`;
