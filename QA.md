@@ -62,3 +62,10 @@ Clipboard supports plain text, HTML/RTF, PNG/JPEG and Explorer file paths; arbit
 - Generated artwork can have small frame-to-frame variation; long-duration performance has not been benchmarked.
 - Electron UI regression passes across all six panels, including non-overlapping mascot/navigation targets, keyboard-accessible pause control and stable opening/dismissal. Unit suite: 22 passing tests.
 - Packaged search journey passes with sprite PNG loading, native Enter-key pause/wake and frozen hidden frames. Final ASAR mascot source and PNG match the workspace.
+
+## Fluid mascot playback (0.3.2)
+
+- Two sprite layers crossfade over 180 ms; subtle breathing uses Web Animations opacity/transform playback rather than JavaScript updates every frame.
+- Source still has six drawings per state. Rendered refresh rate depends on display/system load; 60 fps is a target, not a guaranteed benchmark.
+- Timer and compositor animations are cancelled when hidden/paused or reduced motion is active. Unit checks cover animation cancellation.
+- Real Electron UI sampling confirms intermediate breathing transforms and partial-opacity sprite blends; all panel/layout regressions pass. Packaged asset loading, keyboard pause/wake, hidden frames and search journey pass.

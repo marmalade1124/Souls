@@ -34,6 +34,13 @@ app.whenReady().then(async()=>{
     await window.webContents.executeJavaScript("document.querySelector('#mascot').click()");
     assert.equal(await window.webContents.executeJavaScript("document.querySelector('#mascot').dataset.state"),'sleeping');
     await window.webContents.executeJavaScript("document.querySelector('#mascot').click()");
+    const mascotFrames=await window.webContents.executeJavaScript(`new Promise(resolve=>{
+      mascot.setBusy(true);const samples=[],start=performance.now();
+      function sample(now){const sprite=document.querySelector('#mascot span');samples.push({transform:getComputedStyle(sprite).transform,opacity:Number(getComputedStyle(sprite.querySelector('i')).opacity)});if(now-start<600)requestAnimationFrame(sample);else{mascot.setBusy(false);resolve(samples)}}requestAnimationFrame(sample);
+    })`);
+    assert.ok(mascotFrames.length>20,'mascot motion renders between sprite drawings');
+    assert.ok(new Set(mascotFrames.map(frame=>frame.transform)).size>10,'breathing has continuous intermediate positions');
+    assert.ok(mascotFrames.some(frame=>frame.opacity>0&&frame.opacity<1),'sprite drawings crossfade rather than jump');
     window.on('resize',()=>nativeResizes++);
     assert.equal(await window.webContents.executeJavaScript("document.querySelector('.topbar')"),null,'compact media window removed');
     await window.webContents.executeJavaScript("document.querySelector('#collapse').click()");await pause(1200);assert.equal(window.isVisible(),false);

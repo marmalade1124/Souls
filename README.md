@@ -6,7 +6,7 @@ Soul is a fluid, edge-attached Windows desktop toolbar for apps, file search, cl
 
 Inspired by Hitodama's interaction style, Soul is an independent implementation with its own source code, branding, and assets. **No AI, accounts, API keys, or cloud services are required.**
 
-**Version:** 0.3.1 · Early Windows desktop build
+**Version:** 0.3.2 · Early Windows desktop build
 
 ## Preview
 
@@ -104,7 +104,7 @@ Soul opens at the top of the primary display and adds an icon to the system tray
 Build the installer with `npm run installer`, then open:
 
 ```text
-dist/Soul-Setup-0.3.1.exe
+dist/Soul-Setup-0.3.2.exe
 ```
 
 The setup wizard supports choosing an installation directory, creates desktop and Start Menu shortcuts, and includes an uninstaller. It defaults to a per-user installation. The installer is unsigned and has not yet been published as a GitHub release.
@@ -140,7 +140,7 @@ The shortcut is currently fixed. If another application reserves it, use the tra
 
 ### Mascot
 
-The flame beside the tabs reacts briefly to navigation and animates while a search is pending. Click it (or focus it and press Enter/Space) to pause or wake it; this preference is stored locally. Idle motion plays briefly, then rests. All frame timers stop when the island closes, and reduced-motion mode uses a still frame. It does not use AI or track your screen.
+The flame beside the tabs reacts briefly to navigation and animates while a search is pending. Click it (or focus it and press Enter/Space) to pause or wake it; this preference is stored locally. Drawings blend over 180 ms while subtle breathing uses compositor-driven opacity/transform animation at the display refresh rate (60 fps on a 60 Hz display, when the system can sustain it). The source sheet still has six drawings per state, not 60 unique drawings. Idle motion plays briefly, then rests. All frame timers stop when the island closes, and reduced-motion mode uses a still frame. It does not use AI or track your screen.
 
 ### Controls
 
