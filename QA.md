@@ -69,3 +69,9 @@ Clipboard supports plain text, HTML/RTF, PNG/JPEG and Explorer file paths; arbit
 - Source still has six drawings per state. Rendered refresh rate depends on display/system load; 60 fps is a target, not a guaranteed benchmark.
 - Timer and compositor animations are cancelled when hidden/paused or reduced motion is active. Unit checks cover animation cancellation.
 - Real Electron UI sampling confirms intermediate breathing transforms and partial-opacity sprite blends; all panel/layout regressions pass. Packaged asset loading, keyboard pause/wake, hidden frames and search journey pass.
+
+## Mascot flicker correction (0.3.3)
+
+- Isolated additive layer blending prevents normal alpha compositing from dimming the overlap during crossfades.
+- Electron regression compares identical-frame rendered pixels at full opacity and at a 50/50 crossfade after compositor settling. Generated drawings still have small silhouette differences.
+- Pixel comparison passes with a maximum channel difference of 2/255 (raster rounding); full island UI regression passes.

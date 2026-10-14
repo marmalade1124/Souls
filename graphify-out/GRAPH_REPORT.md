@@ -1,7 +1,7 @@
 # Graph Report - Soul  (2026-10-14)
 
 ## Corpus Check
-- 39 files · ~152,699 words
+- 39 files · ~152,804 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 5 file(s) not represented in the graph (top: .css 2, (none) 1, .ico 1)
 
@@ -155,4 +155,4 @@ _Questions this graph is uniquely positioned to answer:_
   _Cohesion score 0.06451612903225806 - nodes in this community are weakly interconnected._
 ## Extraction integrity and limits
 
-Graph updated for compositor-driven mascot blending. No missing or dangling endpoints. The undirected build collapses 69 relationship variants; 7 raw self-loops. Full relationships retained in extraction-audit.json. scripts/mock-search.cjs and src/media.ps1 yield no AST symbols. This graph is a map, not runtime proof.
+Updated after the mascot alpha-blending correction. No missing or dangling endpoints. Undirected build collapses 69 relationship variants; 7 raw self-loops. Full extraction retained in extraction-audit.json. scripts/mock-search.cjs and src/media.ps1 yield no AST symbols. This is a map, not runtime proof.

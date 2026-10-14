@@ -6,7 +6,7 @@ Soul is a fluid, edge-attached Windows desktop toolbar for apps, file search, cl
 
 Inspired by Hitodama's interaction style, Soul is an independent implementation with its own source code, branding, and assets. **No AI, accounts, API keys, or cloud services are required.**
 
-**Version:** 0.3.2 · Early Windows desktop build
+**Version:** 0.3.3 · Early Windows desktop build
 
 ## Preview
 
@@ -104,7 +104,7 @@ Soul opens at the top of the primary display and adds an icon to the system tray
 Build the installer with `npm run installer`, then open:
 
 ```text
-dist/Soul-Setup-0.3.2.exe
+dist/Soul-Setup-0.3.3.exe
 ```
 
 The setup wizard supports choosing an installation directory, creates desktop and Start Menu shortcuts, and includes an uninstaller. It defaults to a per-user installation. The installer is unsigned and has not yet been published as a GitHub release.

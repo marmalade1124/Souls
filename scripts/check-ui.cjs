@@ -30,6 +30,7 @@ app.whenReady().then(async()=>{
       fs.writeFileSync(path.join(output,`${name}.png`),(await window.webContents.capturePage(rect)).toPNG());
     }
     const stableBounds=window.getBounds(); let nativeResizes=0;
+    await window.webContents.executeJavaScript("if(document.querySelector('#mascot').getAttribute('aria-pressed')==='true')document.querySelector('#mascot').click()");
     assert.equal(await window.webContents.executeJavaScript("document.querySelector('#mascot').dataset.state"),'idle');
     await window.webContents.executeJavaScript("document.querySelector('#mascot').click()");
     assert.equal(await window.webContents.executeJavaScript("document.querySelector('#mascot').dataset.state"),'sleeping');
@@ -41,6 +42,16 @@ app.whenReady().then(async()=>{
     assert.ok(mascotFrames.length>20,'mascot motion renders between sprite drawings');
     assert.ok(new Set(mascotFrames.map(frame=>frame.transform)).size>10,'breathing has continuous intermediate positions');
     assert.ok(mascotFrames.some(frame=>frame.opacity>0&&frame.opacity<1),'sprite drawings crossfade rather than jump');
+    const spriteRect=await window.webContents.executeJavaScript("(()=>{document.querySelector('#mascot').click();const sprite=document.querySelector('#mascot span');sprite.getAnimations({subtree:true}).forEach(a=>a.cancel());const layers=[...sprite.children];layers.forEach(n=>n.style.backgroundPosition='0% 0%');layers[0].style.opacity='1';layers[1].style.opacity='0';const r=sprite.getBoundingClientRect();return{x:Math.floor(r.x),y:Math.floor(r.y),width:Math.ceil(r.width),height:Math.ceil(r.height)}})()");
+    await window.webContents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+    const solid=(await window.webContents.capturePage(spriteRect)).toBitmap();
+    await window.webContents.executeJavaScript("document.querySelectorAll('#mascot i').forEach(n=>n.style.opacity='.5')");
+    await window.webContents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+    const midpoint=(await window.webContents.capturePage(spriteRect)).toBitmap();
+    assert.equal(solid.length,midpoint.length);
+    console.log('Mascot pixel delta',Math.max(...solid.map((v,i)=>Math.abs(v-midpoint[i]))),'brightness',solid.reduce((sum,v,i)=>sum+(i%4===3?0:v),0),midpoint.reduce((sum,v,i)=>sum+(i%4===3?0:v),0));
+    assert.ok(solid.every((value,index)=>Math.abs(value-midpoint[index])<=2),'identical sprite crossfade does not dim or flash at its midpoint');
+    await window.webContents.executeJavaScript("document.querySelector('#mascot').click()");
     window.on('resize',()=>nativeResizes++);
     assert.equal(await window.webContents.executeJavaScript("document.querySelector('.topbar')"),null,'compact media window removed');
     await window.webContents.executeJavaScript("document.querySelector('#collapse').click()");await pause(1200);assert.equal(window.isVisible(),false);

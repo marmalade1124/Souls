@@ -1,9 +1,9 @@
 {
   "package.json": {
-    "mtime": 1791990459.9084795,
-    "seen": 1791990502.4358826,
-    "ast_hash": "82f293252b0422d3c8c9a29deb658c6a",
-    "semantic_hash": "82f293252b0422d3c8c9a29deb658c6a"
+    "mtime": 1791991243.4031844,
+    "seen": 1791991292.8717873,
+    "ast_hash": "d1b9ae84e5390c23d86eaef09e83f66a",
+    "semantic_hash": "d1b9ae84e5390c23d86eaef09e83f66a"
   },
   "scripts/check-clipboard-live.cjs": {
     "mtime": 1791925927.1047964,
@@ -24,10 +24,10 @@
     "semantic_hash": "821d52c4f0c2e9c95ee77d47ca04366d"
   },
   "scripts/check-ui.cjs": {
-    "mtime": 1791990420.2171164,
-    "seen": 1791990502.4358826,
-    "ast_hash": "8639d26a46f43fa1bff1a7030b3caa00",
-    "semantic_hash": "8639d26a46f43fa1bff1a7030b3caa00"
+    "mtime": 1791991197.3559291,
+    "seen": 1791991292.8717873,
+    "ast_hash": "b7377b9ed3f92a4df67c4d9f0dbf9508",
+    "semantic_hash": "b7377b9ed3f92a4df67c4d9f0dbf9508"
   },
   "src/clip-formats.js": {
     "mtime": 1791908187.0750685,
@@ -108,16 +108,16 @@
     "semantic_hash": "6ff5d6c388cd97b76e2cec087028b2ca"
   },
   "QA.md": {
-    "mtime": 1791990500.6440866,
-    "seen": 1791990502.4358826,
-    "ast_hash": "0b4c4b618afdcbc9ae97ffba97701fa2",
-    "semantic_hash": "0b4c4b618afdcbc9ae97ffba97701fa2"
+    "mtime": 1791991291.0187044,
+    "seen": 1791991292.8717873,
+    "ast_hash": "750d4a1bf88fa369bd95f27f3acc3656",
+    "semantic_hash": "750d4a1bf88fa369bd95f27f3acc3656"
   },
   "README.md": {
-    "mtime": 1791990459.9231398,
-    "seen": 1791990502.4358826,
-    "ast_hash": "b2b9ee7949988252dc2ad2792c374d66",
-    "semantic_hash": "b2b9ee7949988252dc2ad2792c374d66"
+    "mtime": 1791991243.4057026,
+    "seen": 1791991292.8717873,
+    "ast_hash": "501ea5b5a2be05bd083f515b4589e729",
+    "semantic_hash": "501ea5b5a2be05bd083f515b4589e729"
   },
   "src/index.html": {
     "mtime": 1791990363.1386187,
